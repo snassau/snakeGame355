@@ -4,20 +4,39 @@
 #include <termios.h>
 #include <sys/select.h>
 #include <time.h>
+#include <signal.h>
 
 #define WIDTH 30
 #define HEIGHT 15
 
 char direction = 'd';
+struct termios orig_termios; //stores original terminal settings
+
+void resetTerminal(){
+    tcsetattr(STDIN_FILENO, TCSANOW, &orig_termios);
+}
+
+void handleSignal(int sig){
+    exit(0); //triggers atexit(resetTerminal)
+}
 
 void setupTerminal()
 {
+    //save current terminal attributes
+    tcgetattr(STDIN_FILENO, &orig_termios);
+
+    //ensure resetTerminal runs automatically
+    atexit(resetTerminal);
+
+    //ensure SIGINT or SIGTERM triggers atexit()
+    signal(SIGINT, handleSignal);
+    signal(SIGTERM, handleSignal);
+
+
     struct termios t;
 
     tcgetattr(STDIN_FILENO, &t);
-
     t.c_lflag &= ~(ICANON | ECHO);
-
     tcsetattr(STDIN_FILENO, TCSANOW, &t);
 }
 
