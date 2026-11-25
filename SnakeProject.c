@@ -5,51 +5,12 @@
 #include <sys/select.h>
 #include <time.h>
 #include <signal.h>
+#include <curses.h>
 
 #define WIDTH 30
 #define HEIGHT 15
 
 char direction = 'd';
-struct termios orig_termios; //stores original terminal settings
-
-void resetTerminal(){
-    tcsetattr(STDIN_FILENO, TCSANOW, &orig_termios);
-}
-
-void handleSignal(int sig){
-    exit(0); //triggers atexit(resetTerminal)
-}
-
-void setupTerminal()
-{
-    //save current terminal attributes
-    tcgetattr(STDIN_FILENO, &orig_termios);
-
-    //ensure resetTerminal runs automatically
-    atexit(resetTerminal);
-
-    //ensure SIGINT or SIGTERM triggers atexit()
-    signal(SIGINT, handleSignal);
-    signal(SIGTERM, handleSignal);
-
-
-    struct termios t;
-
-    tcgetattr(STDIN_FILENO, &t);
-    t.c_lflag &= ~(ICANON | ECHO);
-    tcsetattr(STDIN_FILENO, TCSANOW, &t);
-}
-
-int KeyboardHit() 
-{
-    struct timeval tv = {0L, 0L};
-    fd_set fds;
-
-    FD_ZERO(&fds);
-    FD_SET(STDIN_FILENO, &fds);
-
-    return select(STDIN_FILENO + 1, &fds, NULL, NULL, &tv);
-}
 
 int main()
 {
@@ -66,11 +27,17 @@ int main()
     foodX = rand() % (WIDTH - 2) + 1;
     foodY = rand() % (HEIGHT - 2) + 1;
 
-    setupTerminal();
+    /* curses setup: replaces setupTerminal(), resetTerminal(), and the signal handlers */
+    initscr();
+    cbreak();               // no line buffering
+    noecho();               // don't echo keys
+    keypad(stdscr, TRUE);   // enables KEY_UP, KEY_DOWN, etc.
+    curs_set(0);            // hide the cursor
+    nodelay(stdscr, TRUE);  // getch() returns ERR instead of waiting
 
     while (1)
     {
-        system("clear");
+        erase();
 
         /* Draw  the board on terminal */
         for (int r = 0; r < HEIGHT; r++)
@@ -82,45 +49,37 @@ int main()
                     c == 0 ||
                     c == WIDTH - 1)
                 {
-                    printf("##");
+                    mvaddstr(r, c * 2, "##");
                 }
                 else if (r == y && c == x)
                 {
-                    printf("-D");
+                    mvaddstr(r, c * 2, "-D");
                 }
                 else if (r == foodY && c == foodX)
                 {
-                    printf("..");
+                    mvaddstr(r, c * 2, "..");
                 }
-                else
-                {
-                    printf("  ");
-                }
+                /*empty cells since erase() has blanked them already*/
             }
-
-            printf("\n");
         }
 
-        printf("\nYour Score: %d\n", score); // Shows Current Score
-        printf("\nUse W(Up) A(Left) S(Down) D(Right) to move\n");
+        mvprintw(HEIGHT + 1, 0, "Your Score: %d", score);
+        mvprintw(HEIGHT + 3, 0, "Use W(Up) A(Left) S(Down) D(Right) to move, Q to quit");
 
-        /* Read key presses from the keyboard */
-        while (KeyboardHit())  
-        {
-            char key = getchar();
 
-            if (key == 'w')
-                direction = 'w';
+        refresh(); //nothing appears until this is called
 
-            else if (key == 's')
-                direction = 's';
-
-            else if (key == 'a')
-                direction = 'a';
-
-            else if (key == 'd')
-                direction = 'd';
+        int key;
+        while ((key = getch()) != ERR){
+            if (key == 'w' || key == KEY_UP)        direction = 'w';
+            else if (key == 's' || key == KEY_DOWN) direction = 's';
+            else if (key == 'a' || key == KEY_LEFT) direction = 'a';
+            else if (key == 'd' || key == KEY_RIGHT)direction = 'd';
+            else if (key == 'q')                    direction = 'q';
         }
+
+        if (direction == 'q')
+            break;
 
         /* Move the head of the snake automatically */
         if (direction == 'w')
@@ -141,11 +100,6 @@ int main()
             y == 0 ||
             y == HEIGHT - 1)
         {
-            system("clear");
-
-            printf("\nGAME OVER!\n");
-            printf("\nYour Final Score: %d\n", score); // Shows FINAL score after game over!
-
             break;
         }
 
@@ -158,10 +112,17 @@ int main()
             foodX = rand() % (WIDTH - 2) + 1;
             foodY = rand() % (HEIGHT - 2) + 1;
         }
-
-        /* The speed for the snake */
-        usleep(150000); 
+        
+        napms(150); //repalces usleep(150000);
     }
 
+    mvprintw(HEIGHT / 2, 5, "GAME OVER! Final Score: %d  (press any key)", score);
+    refresh();
+
+    nodelay(stdscr, FALSE);  // make getch() wait
+    flushinp();              // discard leftover movement keypresses
+    getch();                 // wait for a key
+
+    endwin();
     return 0;
 }
