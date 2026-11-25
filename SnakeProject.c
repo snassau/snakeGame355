@@ -22,6 +22,8 @@ int main()
 
     int score = 0; // This is where score is initilized to start at 0
 
+    int snakeLength = 1; // start the snake body with one(head) 
+
     srand(time(NULL));
 
     foodX = rand() % (WIDTH - 2) + 1;
@@ -63,7 +65,7 @@ int main()
             }
         }
 
-        mvprintw(HEIGHT + 1, 0, "Your Score: %d", score);
+        mvprintw(HEIGHT + 1, 0, "Your Score: %d     Length: %d", score, snakeLength);
         mvprintw(HEIGHT + 3, 0, "Use W(Up) A(Left) S(Down) D(Right) to move, Q to quit");
 
 
@@ -108,6 +110,8 @@ int main()
         {
             
             score++; // Here is where the score it counted
+
+            snakeLength++;
             
             foodX = rand() % (WIDTH - 2) + 1;
             foodY = rand() % (HEIGHT - 2) + 1;
@@ -116,7 +120,7 @@ int main()
         napms(150); //repalces usleep(150000);
     }
 
-    mvprintw(HEIGHT / 2, 5, "GAME OVER! Final Score: %d  (press any key)", score);
+    mvprintw(HEIGHT / 2, 5, "GAME OVER! Final Score: %d  (press any key to exit)", score);
     refresh();
 
     nodelay(stdscr, FALSE);  // make getch() wait
