@@ -59,6 +59,8 @@ int main()
     int foodX;
     int foodY;
 
+    int score = 0; // This is where score is initilized to start at 0
+
     srand(time(NULL));
 
     foodX = rand() % (WIDTH - 2) + 1;
@@ -99,6 +101,7 @@ int main()
             printf("\n");
         }
 
+        printf("\nYour Score: %d\n", score); // Shows Current Score
         printf("\nUse W(Up) A(Left) S(Down) D(Right) to move\n");
 
         /* Read key presses from the keyboard */
@@ -141,6 +144,7 @@ int main()
             system("clear");
 
             printf("\nGAME OVER!\n");
+            printf("\nYour Final Score: %d\n", score); // Shows FINAL score after game over!
 
             break;
         }
@@ -148,6 +152,9 @@ int main()
         /* Snake eating the dot/food */
         if (x == foodX && y == foodY)
         {
+            
+            score++; // Here is where the score it counted
+            
             foodX = rand() % (WIDTH - 2) + 1;
             foodY = rand() % (HEIGHT - 2) + 1;
         }
