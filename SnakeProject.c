@@ -66,7 +66,7 @@ int main()
                     {
                         if (r == snakeY[i] && c == snakeX[i])
                         {
-                            mvaddstr(r, c * 2, "OO");
+                            mvaddstr(r, c * 2, "O");
                             bodyPart = 1;
                             break;
                         }
@@ -75,7 +75,7 @@ int main()
                     {
                         if (r == y && c == x)
                         {
-                            mvaddstr(r, c * 2, "-D");
+                            mvaddstr(r, c * 2, "O");
                         }
                         else if ( r == foodY && c == foodX)
                         {
