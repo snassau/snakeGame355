@@ -22,7 +22,13 @@ int main()
 
     int score = 0; // This is where score is initilized to start at 0
 
-    int snakeLength = 1; // start the snake body with one(head) 
+    int snakeLength = 1; // start the snake body with one(head)
+
+    int snakeX[100]; //array for the body 
+    int snakeY[100];
+
+    snakeX[0] = x; //setting each position to 0.
+    snakeY[0] = y;
 
     srand(time(NULL));
 
@@ -53,14 +59,33 @@ int main()
                 {
                     mvaddstr(r, c * 2, "##");
                 }
-                else if (r == y && c == x)
+                else
                 {
-                    mvaddstr(r, c * 2, "-D");
+                    int bodyPart= 0;
+                    for (int i = 1; i < snakeLength; i++)
+                    {
+                        if (r == snakeY[i] && c == snakeX[i])
+                        {
+                            mvaddstr(r, c * 2, "OO");
+                            bodyPart = 1;
+                            break;
+                        }
+                    }
+                    if (!bodyPart)
+                    {
+                        if (r == y && c == x)
+                        {
+                            mvaddstr(r, c * 2, "-D");
+                        }
+                        else if ( r == foodY && c == foodX)
+                        {
+                            mvaddstr(r, c * 2, "..");
+                        }
+                    }
                 }
-                else if (r == foodY && c == foodX)
-                {
-                    mvaddstr(r, c * 2, "..");
-                }
+                    
+                
+                
                 /*empty cells since erase() has blanked them already*/
             }
         }
@@ -83,6 +108,9 @@ int main()
         if (direction == 'q')
             break;
 
+        int oldX = x;
+        int oldY = y;
+
         /* Move the head of the snake automatically */
         if (direction == 'w')
             y--;
@@ -95,6 +123,15 @@ int main()
 
         else if (direction == 'd')
             x++;
+        
+
+        for (int i = snakeLength - 1; i > 0; i--) // MOVES each body segment forwars so it follows the head
+        {
+            snakeX[i] = snakeX[i - 1];
+            snakeY[i] = snakeY[i - 1];
+        }
+        snakeX[0] = x; // UPDATE head position
+        snakeY[0] = y;
 
         /* If you hit the wall, game over */
         if (x == 0 ||
