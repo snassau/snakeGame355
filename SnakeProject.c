@@ -79,7 +79,7 @@ int main()
                         }
                         else if ( r == foodY && c == foodX)
                         {
-                            mvaddstr(r, c * 2, "..");
+                            mvaddstr(r, c * 2, "*");
                         }
                     }
                 }
